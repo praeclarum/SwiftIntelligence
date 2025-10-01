@@ -18,3 +18,7 @@ public extension Tool {
         try Output.getJSONSchema(outputFormatting: outputFormatting)
     }
 }
+
+public protocol IntelligenceTool: Tool {
+    func icall(arguments: GeneratedContent) async throws -> GeneratedContent
+}

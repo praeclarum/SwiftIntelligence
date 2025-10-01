@@ -27,10 +27,9 @@ public final class IntelligenceSession {
     ///
     /// - Parameters
     ///   - model: The language model to use for this session.
-    ///   - guardrails: Controls the guardrails setting for prompt and response filtering. System guardrails is enabled if not specified.
     ///   - tools: Tools to make available to the model for this session.
     ///   - instructions: Instructions that control the model's behavior.
-    public convenience init(model: IntelligenceModel, guardrails: LanguageModelSession.Guardrails = .default, tools: [any Tool] = [], @InstructionsBuilder instructions: () throws -> Instructions) rethrows {
+    public convenience init(model: IntelligenceModel, tools: [any Tool] = [], @InstructionsBuilder instructions: () throws -> Instructions) rethrows {
         let instructionsValue = try instructions()
         self.init(model: model, tools: tools, instructions: instructionsValue)
     }
@@ -79,6 +78,26 @@ public final class IntelligenceSession {
     nonisolated(nonsending) final public func respond(to prompt: String, schema: GenerationSchema, includeSchemaInPrompt: Bool = true, options: GenerationOptions = GenerationOptions()) async throws -> GeneratedContent {
         try await implementation.respond(to: Prompt(prompt), schema: schema, includeSchemaInPrompt: includeSchemaInPrompt, options: options)
     }
+
+    /// Produces a generable object as a response to a prompt.
+    ///
+    /// Consider using the default value of `true` for `includeSchemaInPrompt`.
+    /// The exception to the rule is when the model has knowledge about the expected response format, either
+    /// because it has been trained on it, or because it has seen exhaustive examples during this session.
+    ///
+    /// - Parameters:
+    ///   - prompt: A prompt for the model to respond to.
+    ///   - type: A type to produce as the response.
+    ///   - includeSchemaInPrompt: Inject the schema into the prompt to bias the model.
+    ///   - options: Options that control how tokens are sampled from the distribution the model produces.
+    /// - Returns: An instance of the `Generable` type.
+    /// - Returns: ``GeneratedContent`` containing the fields and values defined in the schema.
+    @discardableResult
+    nonisolated(nonsending) final public func respond<Content>(to prompt: String, generating type: Content.Type = Content.self, includeSchemaInPrompt: Bool = true, options: GenerationOptions = GenerationOptions()) async throws -> Content where Content : Generable {
+        let generatedContent = try await implementation.respond(to: Prompt(prompt), schema: type.generationSchema, includeSchemaInPrompt: includeSchemaInPrompt, options: options)
+        return try Content(generatedContent)
+    }
+
 }
 
 @available(iOS 26.0, macOS 26.0, macCatalyst 26.0, visionOS 26.0, *)
