@@ -4,12 +4,12 @@ Unify Apple Intelligence foundation models with external LLMs using one small, c
 
 SwiftIntelligence gives app developers a smooth upgrade path: start on-device with Apple Intelligence for privacy and low latency, then swap to cloud models like OpenAI for more power—without rewriting your app. The API stays the same across providers and supports tools/function-calling and structured (typed) generative output.
 
-• One session type for all models: `IntelligenceSession`
-• One model enum to choose providers: `IntelligenceModel`
-• Built-in support today: Apple Intelligence + OpenAI (Responses API)
-• Structured output via JSON Schema and Generable Swift types
-• Tool calls (aka function calling) with a clean Swift protocol
-• Full transcript export for debugging and analytics
+* One session type for all models: `IntelligenceSession`
+* One model enum to choose providers: `IntelligenceModel`
+* Built-in support today: Apple Intelligence + OpenAI (Responses API)
+* Structured output via JSON Schema and Generable Swift types
+* Tool calls (aka function calling) with a clean Swift protocol
+* Full transcript export for debugging and analytics
 
 
 ## Why this exists
@@ -244,7 +244,5 @@ Issues and PRs are welcome. If you’re adding a provider, keep the `Intelligenc
 
 ## License
 
-Copyright (c) 2025 Frank A. Krueger.
-
-Intended to be MIT licensed. If you need a different license or clarity here, please open an issue.
+MIT © Krueger Systems, Inc. See [LICENSE](./LICENSE).
 
