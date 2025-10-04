@@ -19,6 +19,7 @@ public extension Tool {
     }
 }
 
+@available(iOS 26.0, macOS 26.0, macCatalyst 26.0, visionOS 26.0, *)
 public protocol IntelligenceTool: Tool {
     func icall(arguments: GeneratedContent) async throws -> GeneratedContent
 }
