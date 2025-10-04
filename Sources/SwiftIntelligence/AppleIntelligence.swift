@@ -14,7 +14,7 @@ final class AppleIntelligenceSessionImplementation: IntelligenceSessionImplement
     
     init(model: SystemLanguageModel, tools: [any Tool], instructions: Instructions?) {
         self.session = LanguageModelSession(model: model, tools: tools, instructions: instructions)
-        print(self.session.transcript.json)
+//        print(self.session.transcript.json)
     }
     
     var transcript: Transcript { session.transcript }
