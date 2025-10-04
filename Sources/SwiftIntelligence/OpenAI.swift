@@ -47,10 +47,12 @@ nonisolated struct OpenAIResponsesRequest: Codable {
     var text: OpenAIRequestText?
 }
 
+@available(iOS 26.0, macOS 26.0, macCatalyst 26.0, visionOS 26.0, *)
 nonisolated struct OpenAIRequestText: Codable {
     let format: OpenAIRequestTextFormat
 }
 
+@available(iOS 26.0, macOS 26.0, macCatalyst 26.0, visionOS 26.0, *)
 nonisolated struct OpenAIRequestTextFormat: Codable {
     let type: String
     let name: String?
@@ -156,6 +158,8 @@ nonisolated class OpenAISessionImplementation: IntelligenceSessionImplementation
     private let model: String
     private let tools: [String: any Tool]
     private var transcriptEntries: [Transcript.Entry] = []
+    
+    let timeoutInterval: TimeInterval = 2*60 // 2 minutes
 
     init(model: String, apiKey: String, tools: [any Tool], instructions: Instructions?) {
         self.model = model
@@ -248,6 +252,7 @@ nonisolated class OpenAISessionImplementation: IntelligenceSessionImplementation
         requestEncoder.outputFormatting = .prettyPrinted
         let requestJsonData = try requestEncoder.encode(requestObject)
         request.httpBody = requestJsonData
+        request.timeoutInterval = timeoutInterval
         let (data, response) = try await URLSession.shared.data(for: request)
         if let httpResponse = response as? HTTPURLResponse, httpResponse.statusCode != 200 {
             if let errorResponse = try? JSONDecoder().decode(OpenAIErrorResponse.self, from: data) {
