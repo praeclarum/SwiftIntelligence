@@ -11,7 +11,6 @@ import FoundationModels
 enum PromptComponent {
     case text(String)
     
-    @available(iOS 26.0, macOS 26.0, macCatalyst 26.0, visionOS 26.0, *)
     nonisolated var transcriptSegment: Transcript.Segment {
         switch self {
         case .text(let text):
@@ -20,7 +19,6 @@ enum PromptComponent {
     }
 }
 
-@available(iOS 26.0, macOS 26.0, macCatalyst 26.0, visionOS 26.0, *)
 extension Prompt {
     public nonisolated var transcriptSegments: [Transcript.Segment] {
         components.map { $0.transcriptSegment }

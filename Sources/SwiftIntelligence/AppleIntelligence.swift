@@ -8,7 +8,6 @@
 import Foundation
 import FoundationModels
 
-@available(iOS 26.0, macOS 26.0, macCatalyst 26.0, visionOS 26.0, *)
 final class AppleIntelligenceSessionImplementation: IntelligenceSessionImplementation {
     private let session: LanguageModelSession
     

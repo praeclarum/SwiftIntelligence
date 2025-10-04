@@ -8,7 +8,6 @@
 import Foundation
 import FoundationModels
 
-@available(iOS 26.0, macOS 26.0, macCatalyst 26.0, visionOS 26.0, *)
 struct OpenAIToolDefinition: Codable {
     let type: String
     let name: String
@@ -39,7 +38,6 @@ struct OpenAIContent: Codable {
     let text: String
 }
 
-@available(iOS 26.0, macOS 26.0, macCatalyst 26.0, visionOS 26.0, *)
 nonisolated struct OpenAIResponsesRequest: Codable {
     let model: String
     let input: [OpenAIMessage]
@@ -47,12 +45,10 @@ nonisolated struct OpenAIResponsesRequest: Codable {
     var text: OpenAIRequestText?
 }
 
-@available(iOS 26.0, macOS 26.0, macCatalyst 26.0, visionOS 26.0, *)
 nonisolated struct OpenAIRequestText: Codable {
     let format: OpenAIRequestTextFormat
 }
 
-@available(iOS 26.0, macOS 26.0, macCatalyst 26.0, visionOS 26.0, *)
 nonisolated struct OpenAIRequestTextFormat: Codable {
     let type: String
     let name: String?
@@ -92,14 +88,12 @@ struct OpenAIUsage: Codable {
     }
 }
 
-@available(iOS 26.0, macOS 26.0, macCatalyst 26.0, visionOS 26.0, *)
 extension Tool {
     nonisolated var openAIToolDefinition: OpenAIToolDefinition {
         OpenAIToolDefinition(type: "function", name: name, description: description, parameters: parameters)
     }
 }
 
-@available(iOS 26.0, macOS 26.0, macCatalyst 26.0, visionOS 26.0, *)
 extension Transcript.Segment {
     nonisolated var openAIContent: OpenAIContent? {
         switch self {
@@ -112,7 +106,6 @@ extension Transcript.Segment {
     }
 }
 
-@available(iOS 26.0, macOS 26.0, macCatalyst 26.0, visionOS 26.0, *)
 extension Transcript.Entry {
     nonisolated var openAIMessage: OpenAIMessage {
         var content: [OpenAIContent] = []
@@ -152,7 +145,6 @@ nonisolated struct OpenAIErrorResponse: Codable {
     }
 }
 
-@available(iOS 26.0, macOS 26.0, macCatalyst 26.0, visionOS 26.0, *)
 nonisolated class OpenAISessionImplementation: IntelligenceSessionImplementation {
     private let apiKey: String
     private let model: String
@@ -198,7 +190,7 @@ nonisolated class OpenAISessionImplementation: IntelligenceSessionImplementation
         transcriptEntries.append(.prompt(Transcript.Prompt(segments: segments, options: options, responseFormat: responseFormat)))
     }
     
-    private func doRespond(to prompt: Prompt, schema: GenerationSchema?, options: GenerationOptions) async throws -> String {
+    nonisolated(nonsending) private func doRespond(to prompt: Prompt, schema: GenerationSchema?, options: GenerationOptions) async throws -> String {
         addPromptToTranscript(prompt, options: options)
         var inputList = transcriptEntries.map { $0.openAIMessage }
         var responseContent = ""
@@ -235,7 +227,7 @@ nonisolated class OpenAISessionImplementation: IntelligenceSessionImplementation
         return responseContent
     }
     
-    private func getResponses(input: [OpenAIMessage], schema: GenerationSchema?) async throws -> OpenAIResponsesResponse {
+    nonisolated(nonsending) private func getResponses(input: [OpenAIMessage], schema: GenerationSchema?) async throws -> OpenAIResponsesResponse {
         var requestObject = OpenAIResponsesRequest(
             model: model,
             input: input,
@@ -265,7 +257,7 @@ nonisolated class OpenAISessionImplementation: IntelligenceSessionImplementation
         return responseObject
     }
     
-    private func callTool(name: String?, arguments: String?) async -> String {
+    nonisolated(nonsending) private func callTool(name: String?, arguments: String?) async -> String {
         guard let name else {
             return "{\"error\": \"Missing function name.\"}"
         }

@@ -8,7 +8,6 @@
 import Foundation
 import FoundationModels
 
-@available(iOS 26.0, macOS 26.0, macCatalyst 26.0, visionOS 26.0, *)
 public extension Tool {
     func getParametersJSONSchema(outputFormatting: JSONEncoder.OutputFormatting = []) throws -> String {
         try parameters.getJSONSchema(outputFormatting: outputFormatting)
@@ -19,7 +18,6 @@ public extension Tool {
     }
 }
 
-@available(iOS 26.0, macOS 26.0, macCatalyst 26.0, visionOS 26.0, *)
 public protocol IntelligenceTool: Tool {
     func icall(arguments: GeneratedContent) async throws -> GeneratedContent
 }

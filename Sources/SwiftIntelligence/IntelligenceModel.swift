@@ -8,7 +8,6 @@
 import Foundation
 import FoundationModels
 
-@available(iOS 26.0, macOS 26.0, macCatalyst 26.0, visionOS 26.0, *)
 public enum IntelligenceModel: Identifiable {
     case openAI(model: String)
     case appleIntelligence(model: SystemLanguageModel = SystemLanguageModel.default)
@@ -49,11 +48,10 @@ public enum IntelligenceModel: Identifiable {
     }
 }
 
-public struct IntelligenceModelSpec: Identifiable {
+public struct IntelligenceModelSpec: Identifiable, Sendable {
     public let id: String
     public let displayName: String
     
-    @available(iOS 26.0, macOS 26.0, macCatalyst 26.0, visionOS 26.0, *)
     public var model: IntelligenceModel {
         IntelligenceModel.withId(id)
     }

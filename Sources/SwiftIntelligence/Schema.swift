@@ -8,7 +8,6 @@
 import Foundation
 import FoundationModels
 
-@available(iOS 26.0, macOS 26.0, macCatalyst 26.0, visionOS 26.0, *)
 public extension GenerationSchema {
     func getJSONSchema(outputFormatting: JSONEncoder.OutputFormatting = []) throws -> String {
         let jsonEncoder = JSONEncoder()
@@ -30,7 +29,6 @@ public extension GenerationSchema {
     }
 }
 
-@available(iOS 26.0, macOS 26.0, macCatalyst 26.0, visionOS 26.0, *)
 public extension Generable {
     static func getJSONSchema(outputFormatting: JSONEncoder.OutputFormatting = []) throws -> String {
         try Self.generationSchema.getJSONSchema(outputFormatting: outputFormatting)

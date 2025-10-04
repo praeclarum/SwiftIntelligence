@@ -1,11 +1,10 @@
-// swift-tools-version: 5.9
-// The swift-tools-version declares the minimum version of Swift required to build this package.
+// swift-tools-version: 6.2
 
 import PackageDescription
 
 let package = Package(
     name: "SwiftIntelligence",
-    platforms: [.visionOS(.v1), .iOS(.v12), .watchOS(.v6), .tvOS(.v15), .macOS(.v11), .macCatalyst(.v13)],
+    platforms: [.visionOS(.v26), .iOS(.v26), .watchOS(.v26), .tvOS(.v26), .macOS(.v26), .macCatalyst(.v26)],
     products: [
         .library(
             name: "SwiftIntelligence",

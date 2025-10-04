@@ -8,7 +8,6 @@
 import Foundation
 import FoundationModels
 
-@available(iOS 26.0, macOS 26.0, macCatalyst 26.0, visionOS 26.0, *)
 public final class IntelligenceSession {
     let model: IntelligenceModel
     let tools: [any Tool]
@@ -100,7 +99,6 @@ public final class IntelligenceSession {
 
 }
 
-@available(iOS 26.0, macOS 26.0, macCatalyst 26.0, visionOS 26.0, *)
 protocol IntelligenceSessionImplementation {
     var transcript: Transcript { get }
     
