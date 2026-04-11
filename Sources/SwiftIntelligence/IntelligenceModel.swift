@@ -12,6 +12,7 @@ public enum IntelligenceModel: Identifiable {
     case openAI(model: String)
     case appleIntelligence(model: SystemLanguageModel = SystemLanguageModel.default)
     case mlx(model: String)
+    case chatAPI(model: String, baseURL: String)
     
     public var id: String {
         switch self {
@@ -21,6 +22,8 @@ public enum IntelligenceModel: Identifiable {
             "appleIntelligence"
         case .mlx(let model):
             "mlx:\(model)"
+        case .chatAPI(let model, let baseURL):
+            "chatapi:\(baseURL):\(model)"
         }
     }
     
@@ -32,6 +35,8 @@ public enum IntelligenceModel: Identifiable {
             AppleIntelligenceSessionImplementation(model: model, tools: tools, instructions: instructions)
         case .mlx(let model):
             MLXSessionImplementation(model: model, tools: tools, instructions: instructions)
+        case .chatAPI(let model, let baseURL):
+            ChatAPISessionImplementation(model: model, baseURL: baseURL, apiKey: IntelligenceModel.chatAPIApiKey, tools: tools, instructions: instructions)
         }
     }
     
@@ -44,6 +49,15 @@ public enum IntelligenceModel: Identifiable {
         }
     }
 
+    public static var chatAPIApiKey: String {
+        get {
+            UserDefaults.standard.string(forKey: "SwiftIntelligence.ChatAPIKey") ?? ""
+        }
+        set {
+            UserDefaults.standard.set(newValue, forKey: "SwiftIntelligence.ChatAPIKey")
+        }
+    }
+
     public static func withId(_ modelId: String) -> IntelligenceModel {
         if modelId.hasPrefix("openai:") {
             let modelName = String(modelId.dropFirst("openai:".count))
@@ -52,6 +66,17 @@ public enum IntelligenceModel: Identifiable {
         if modelId.hasPrefix("mlx:") {
             let modelName = String(modelId.dropFirst("mlx:".count))
             return .mlx(model: modelName)
+        }
+        if modelId.hasPrefix("chatapi:") {
+            let rest = String(modelId.dropFirst("chatapi:".count))
+            // Format: chatapi:<baseURL>:<model>
+            // Find the last colon that separates baseURL from model
+            // baseURL contains "://" so we split on the last colon
+            if let lastColonRange = rest.range(of: ":", options: .backwards) {
+                let baseURL = String(rest[rest.startIndex..<lastColonRange.lowerBound])
+                let modelName = String(rest[lastColonRange.upperBound...])
+                return .chatAPI(model: modelName, baseURL: baseURL)
+            }
         }
         return .appleIntelligence()
     }
