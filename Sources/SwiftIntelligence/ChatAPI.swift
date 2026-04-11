@@ -199,7 +199,7 @@ nonisolated class ChatAPISessionImplementation: IntelligenceSessionImplementatio
     @discardableResult
     nonisolated(nonsending) func respond(to prompt: Prompt, schema: GenerationSchema, includeSchemaInPrompt: Bool, options: GenerationOptions) async throws -> GeneratedContent {
         let json = try await doRespond(to: prompt, schema: schema, includeSchemaInPrompt: includeSchemaInPrompt, options: options)
-        let cleaned = Self.stripCodeFences(json)
+        let cleaned = stripCodeFences(json)
         return try GeneratedContent(json: cleaned)
     }
 
@@ -302,7 +302,7 @@ nonisolated class ChatAPISessionImplementation: IntelligenceSessionImplementatio
 
     // MARK: - Message Building
 
-    private func buildMessages(from entries: [Transcript.Entry]) -> [ChatAPIMessage] {
+    func buildMessages(from entries: [Transcript.Entry]) -> [ChatAPIMessage] {
         var messages: [ChatAPIMessage] = []
         for entry in entries {
             switch entry {
@@ -430,18 +430,4 @@ nonisolated class ChatAPISessionImplementation: IntelligenceSessionImplementatio
         }
     }
 
-    // MARK: - Helpers
-
-    private static func stripCodeFences(_ text: String) -> String {
-        var s = text.trimmingCharacters(in: .whitespacesAndNewlines)
-        if s.hasPrefix("```json") {
-            s = String(s.dropFirst("```json".count))
-        } else if s.hasPrefix("```") {
-            s = String(s.dropFirst("```".count))
-        }
-        if s.hasSuffix("```") {
-            s = String(s.dropLast("```".count))
-        }
-        return s.trimmingCharacters(in: .whitespacesAndNewlines)
-    }
 }

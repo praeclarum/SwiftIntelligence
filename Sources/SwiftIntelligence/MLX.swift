@@ -171,7 +171,7 @@ nonisolated class MLXSessionImplementation: IntelligenceSessionImplementation {
         transcriptEntries.append(contentsOf: toolCallRecorder.drain())
 
         // Strip markdown code fences if present
-        let cleaned = Self.stripCodeFences(responseText)
+        let cleaned = stripCodeFences(responseText)
         let responseContent = try GeneratedContent(json: cleaned)
 
         // Record the model's structured response
@@ -195,18 +195,6 @@ nonisolated class MLXSessionImplementation: IntelligenceSessionImplementation {
         }.joined(separator: "\n")
     }
 
-    private static func stripCodeFences(_ text: String) -> String {
-        var s = text.trimmingCharacters(in: .whitespacesAndNewlines)
-        if s.hasPrefix("```json") {
-            s = String(s.dropFirst("```json".count))
-        } else if s.hasPrefix("```") {
-            s = String(s.dropFirst("```".count))
-        }
-        if s.hasSuffix("```") {
-            s = String(s.dropLast("```".count))
-        }
-        return s.trimmingCharacters(in: .whitespacesAndNewlines)
-    }
 }
 
 /// Thread-safe buffer for recording tool call transcript entries from the `@Sendable` toolDispatch closure.
