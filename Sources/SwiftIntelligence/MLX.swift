@@ -17,6 +17,7 @@ nonisolated class MLXSessionImplementation: IntelligenceSessionImplementation {
     private let modelId: String
     private let intelligenceTools: [String: any FoundationModels.Tool]
     private let instructionsText: String
+    private let toolCallRecorder = ToolCallRecorder()
     private nonisolated(unsafe) var transcriptEntries: [Transcript.Entry] = []
     private nonisolated(unsafe) var chatSession: ChatSession?
     private nonisolated(unsafe) var modelContainer: ModelContainer?
@@ -68,8 +69,8 @@ nonisolated class MLXSessionImplementation: IntelligenceSessionImplementation {
 
         let mlxTools: [[String: any Sendable]]? = intelligenceTools.isEmpty ? nil : intelligenceTools.values.map { $0.mlxToolSpec }
 
-        // TODO: Implement full tool dispatch that converts MLX ToolCall arguments to GeneratedContent
         let tools = self.intelligenceTools
+        let recorder = self.toolCallRecorder
         let toolDispatch: (@Sendable (MLXLMCommon.ToolCall) async throws -> String)? = mlxTools == nil ? nil : { @Sendable toolCall in
             let name = toolCall.function.name
             guard let tool = tools[name] else {
@@ -86,7 +87,21 @@ nonisolated class MLXSessionImplementation: IntelligenceSessionImplementation {
                     return "{\"error\": \"Failed to serialize arguments for \(name).\"}"
                 }
                 let arguments = try GeneratedContent(json: jsonString)
+
+                // Record the tool call in the transcript
+                recorder.append(.toolCalls(Transcript.ToolCalls([
+                    Transcript.ToolCall(id: UUID().uuidString, toolName: name, arguments: arguments)
+                ])))
+
                 let result = try await itool.icall(arguments: arguments)
+
+                // Record the tool output in the transcript
+                recorder.append(.toolOutput(Transcript.ToolOutput(
+                    id: UUID().uuidString,
+                    toolName: name,
+                    segments: [.text(Transcript.TextSegment(content: result.jsonString))]
+                )))
+
                 return result.jsonString
             } catch {
                 return "{\"error\": \"Function \(name) call failed: \(error.localizedDescription)\"}"
@@ -121,6 +136,15 @@ nonisolated class MLXSessionImplementation: IntelligenceSessionImplementation {
         }
         let promptText = extractText(from: segments)
         let response = try await chatSession.respond(to: promptText)
+
+        // Append any tool call/output entries recorded during generation
+        transcriptEntries.append(contentsOf: toolCallRecorder.drain())
+
+        // Record the model's final response
+        transcriptEntries.append(.response(Transcript.Response(
+            assetIDs: [],
+            segments: [.text(Transcript.TextSegment(content: response))])))
+
         return response
     }
 
@@ -143,9 +167,18 @@ nonisolated class MLXSessionImplementation: IntelligenceSessionImplementation {
         }
         let responseText = try await chatSession.respond(to: fullPrompt)
 
+        // Append any tool call/output entries recorded during generation
+        transcriptEntries.append(contentsOf: toolCallRecorder.drain())
+
         // Strip markdown code fences if present
         let cleaned = Self.stripCodeFences(responseText)
         let responseContent = try GeneratedContent(json: cleaned)
+
+        // Record the model's structured response
+        transcriptEntries.append(.response(Transcript.Response(
+            assetIDs: [],
+            segments: [.text(Transcript.TextSegment(content: cleaned))])))
+
         return responseContent
     }
 
@@ -176,6 +209,26 @@ nonisolated class MLXSessionImplementation: IntelligenceSessionImplementation {
     }
 }
 
+/// Thread-safe buffer for recording tool call transcript entries from the `@Sendable` toolDispatch closure.
+private final class ToolCallRecorder: @unchecked Sendable {
+    private let lock = NSLock()
+    private var entries: [Transcript.Entry] = []
+
+    func append(_ entry: Transcript.Entry) {
+        lock.lock()
+        defer { lock.unlock() }
+        entries.append(entry)
+    }
+
+    func drain() -> [Transcript.Entry] {
+        lock.lock()
+        defer { lock.unlock() }
+        let result = entries
+        entries.removeAll()
+        return result
+    }
+}
+
 // MARK: - Tool Conversion
 
 extension FoundationModels.Tool {
@@ -198,6 +251,8 @@ extension FoundationModels.Tool {
         ] as [String: any Sendable]
     }
 }
+
+// MARK: - Error Handling
 
 enum MLXError: LocalizedError {
     case modelNotLoaded
