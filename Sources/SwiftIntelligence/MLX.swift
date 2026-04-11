@@ -8,13 +8,18 @@ import FoundationModels
 import MLXLLM
 @preconcurrency import MLXLMCommon
 
+// ChatSession is documented as "not thread-safe; use from a single task/thread at a time."
+// Our usage satisfies this: nonisolated(nonsending) methods inherit the caller's isolation,
+// serializing calls from any given isolation domain.
+extension ChatSession: @retroactive @unchecked Sendable {}
+
 nonisolated class MLXSessionImplementation: IntelligenceSessionImplementation {
     private let modelId: String
     private let intelligenceTools: [String: any FoundationModels.Tool]
     private let instructionsText: String
-    private var transcriptEntries: [Transcript.Entry] = []
+    private nonisolated(unsafe) var transcriptEntries: [Transcript.Entry] = []
     private nonisolated(unsafe) var chatSession: ChatSession?
-    private var modelContainer: ModelContainer?
+    private nonisolated(unsafe) var modelContainer: ModelContainer?
 
     init(model: String, tools: [any FoundationModels.Tool], instructions: Instructions?) {
         self.modelId = model
@@ -96,12 +101,11 @@ nonisolated class MLXSessionImplementation: IntelligenceSessionImplementation {
         )
     }
 
-    private nonisolated(nonsending) func ensureLoaded() async throws -> ChatSession {
-        if let session = chatSession {
-            return session
+    private nonisolated(nonsending) func ensureLoaded() async throws {
+        if chatSession != nil {
+            return
         }
         try await prepare(progress: nil)
-        return chatSession!
     }
 
     // MARK: - Respond
@@ -111,9 +115,9 @@ nonisolated class MLXSessionImplementation: IntelligenceSessionImplementation {
         let segments = prompt.transcriptSegments
         transcriptEntries.append(.prompt(Transcript.Prompt(segments: segments, options: options, responseFormat: nil)))
 
-        let session = try await ensureLoaded()
+        try await ensureLoaded()
         let promptText = extractText(from: segments)
-        let response = try await session.respond(to: promptText)
+        let response = try await chatSession!.respond(to: promptText)
         return response
     }
 
@@ -130,8 +134,8 @@ nonisolated class MLXSessionImplementation: IntelligenceSessionImplementation {
 
         transcriptEntries.append(.prompt(Transcript.Prompt(segments: segments, options: options, responseFormat: nil)))
 
-        let session = try await ensureLoaded()
-        let responseText = try await session.respond(to: fullPrompt)
+        try await ensureLoaded()
+        let responseText = try await chatSession!.respond(to: fullPrompt)
 
         // Strip markdown code fences if present
         let cleaned = Self.stripCodeFences(responseText)
