@@ -6,7 +6,7 @@ SwiftIntelligence gives app developers a smooth upgrade path: start on-device wi
 
 * One session type for all models: `IntelligenceSession`
 * One model enum to choose providers: `IntelligenceModel`
-* Built-in support today: Apple Intelligence + OpenAI (Responses API)
+* Built-in support today: Apple Intelligence, OpenAI (Responses API), MLX (on-device), and any OpenAI-compatible Chat API
 * Structured output via JSON Schema and Generable Swift types
 * Tool calls (aka function calling) with a clean Swift protocol
 * Full transcript export for debugging and analytics
@@ -64,6 +64,41 @@ IntelligenceModel.openAIApiKey = ProcessInfo.processInfo.environment["OPENAI_API
 
 let session = IntelligenceSession(model: .openAI(model: "gpt-4o-mini")) {
 	"You are a helpful, concise assistant for a Swift app. Keep answers under 100 words."
+}
+
+let reply = try await session.respond(to: "Write a cheerful haiku about Swift.")
+print(reply)
+```
+
+Run a model locally with MLX:
+
+```swift
+import SwiftIntelligence
+
+let session = IntelligenceSession(model: .mlx(model: "mlx-community/Qwen3-4B-4bit")) {
+	"You are a helpful, concise assistant."
+}
+
+// Download and load the model (reports progress)
+try await session.prepare { progress in
+	print("Download progress: \(progress)")
+}
+
+let reply = try await session.respond(to: "Write a cheerful haiku about Swift.")
+print(reply)
+```
+
+Use any OpenAI-compatible Chat API (OpenRouter, Amazon Bedrock, etc.):
+
+```swift
+import SwiftIntelligence
+
+IntelligenceModel.chatAPIKey = ProcessInfo.processInfo.environment["CHAT_API_KEY"] ?? ""
+
+let session = IntelligenceSession(
+	model: .chatAPI(model: "anthropic/claude-sonnet-4", baseURL: "https://openrouter.ai/api/v1")
+) {
+	"You are a helpful, concise assistant."
 }
 
 let reply = try await session.respond(to: "Write a cheerful haiku about Swift.")
@@ -179,8 +214,9 @@ print(session.transcript.json)
 ## API at a glance
 
 - `IntelligenceSession` – create once per conversation; call `respond(…)` for strings or typed content
-- `IntelligenceModel` – select `.appleIntelligence()` or `.openAI(model: String)`
+- `IntelligenceModel` – select `.appleIntelligence()`, `.openAI(model:)`, `.mlx(model:)`, or `.chatAPI(model:baseURL:)`
 - `IntelligenceModel.openAIApiKey` – set once; stored in `UserDefaults`
+- `IntelligenceModel.chatAPIKey` – set once; stored in `UserDefaults`
 - `Instructions` – provide system/developer guidance at session start
 - `Prompt` – the structured prompt type in FoundationModels (you can pass strings directly)
 - `GenerationSchema` and `Generable` – define structured output
@@ -196,10 +232,17 @@ OpenAI API key
 IntelligenceModel.openAIApiKey = "sk-…" // stored in UserDefaults under SwiftIntelligence.OpenAIAPIKey
 ```
 
+Chat API key (for OpenAI-compatible providers like OpenRouter)
+
+```swift
+IntelligenceModel.chatAPIKey = "sk-…" // stored in UserDefaults under SwiftIntelligence.ChatAPIKey
+```
+
 You can also load from an environment variable during development:
 
 ```swift
 IntelligenceModel.openAIApiKey = ProcessInfo.processInfo.environment["OPENAI_API_KEY"] ?? ""
+IntelligenceModel.chatAPIKey = ProcessInfo.processInfo.environment["CHAT_API_KEY"] ?? ""
 ```
 
 
@@ -207,7 +250,8 @@ IntelligenceModel.openAIApiKey = ProcessInfo.processInfo.environment["OPENAI_API
 
 - Xcode with SDKs that include the FoundationModels framework (iOS 26, macOS 26, etc. or later)
 - Apple platforms that support Apple Intelligence (for on-device usage)
-- For OpenAI, network access and a valid API key
+- For OpenAI or Chat API providers, network access and a valid API key
+- For MLX, macOS with Apple Silicon (models are downloaded and run locally via MLXLLM)
 
 The package itself is pure Swift; platform availability follows FoundationModels.
 
@@ -224,7 +268,7 @@ print(try Recipe.getJSONSchema(outputFormatting: [.prettyPrinted]))
 
 ## Roadmap
 
-- Additional providers: Claude, Gemini, and others via OpenRouter
+- Additional providers: Gemini and others
 - Streaming responses and partial structured decoding
 - Richer multimodal prompts (images, etc.) across providers
 - More complete transcript capture of responses
