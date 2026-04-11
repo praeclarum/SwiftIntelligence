@@ -10,9 +10,16 @@ let package = Package(
             name: "SwiftIntelligence",
             targets: ["SwiftIntelligence"]),
     ],
+    dependencies: [
+        .package(url: "https://github.com/ml-explore/mlx-swift-lm", from: "2.31.3"),
+    ],
     targets: [
         .target(
-            name: "SwiftIntelligence"),
+            name: "SwiftIntelligence",
+            dependencies: [
+                .product(name: "MLXLLM", package: "mlx-swift-lm"),
+                .product(name: "MLXLMCommon", package: "mlx-swift-lm"),
+            ]),
         .testTarget(
             name: "SwiftIntelligenceTests",
             dependencies: ["SwiftIntelligence"]),

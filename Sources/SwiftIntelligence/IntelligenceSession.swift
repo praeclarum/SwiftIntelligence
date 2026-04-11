@@ -33,6 +33,14 @@ public final class IntelligenceSession {
         self.init(model: model, tools: tools, instructions: instructionsValue)
     }
 
+    /// Prepares the session for use (e.g. downloads and loads MLX models).
+    /// For backends that don't require preparation, this is a no-op.
+    ///
+    /// - Parameter progress: An optional `Progress` object that tracks download and loading progress.
+    nonisolated(nonsending) final public func prepare(progress: Progress? = nil) async throws {
+        try await implementation.prepare(progress: progress)
+    }
+
     /// Produces a response to a prompt.
     ///
     /// - Parameters:
@@ -96,12 +104,13 @@ public final class IntelligenceSession {
         let generatedContent = try await implementation.respond(to: Prompt(prompt), schema: type.generationSchema, includeSchemaInPrompt: includeSchemaInPrompt, options: options)
         return try Content(generatedContent)
     }
-
 }
 
 protocol IntelligenceSessionImplementation {
     var transcript: Transcript { get }
     
+    nonisolated(nonsending) func prepare(progress: Progress?) async throws
+
     @discardableResult
     nonisolated(nonsending) func respond(to prompt: Prompt, options: GenerationOptions) async throws -> String
 

@@ -170,6 +170,12 @@ nonisolated class OpenAISessionImplementation: IntelligenceSessionImplementation
     var transcript: Transcript {
         Transcript(entries: transcriptEntries)
     }
+
+    nonisolated(nonsending) func prepare(progress: Progress?) async throws {
+        // Set progress to 100%
+        progress?.totalUnitCount = 1
+        progress?.completedUnitCount = 1
+    }
     
     @discardableResult
     nonisolated(nonsending) func respond(to prompt: Prompt, options: GenerationOptions) async throws -> String {

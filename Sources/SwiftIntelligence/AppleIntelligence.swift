@@ -13,11 +13,15 @@ final class AppleIntelligenceSessionImplementation: IntelligenceSessionImplement
     
     init(model: SystemLanguageModel, tools: [any Tool], instructions: Instructions?) {
         self.session = LanguageModelSession(model: model, tools: tools, instructions: instructions)
-//        print(self.session.transcript.json)
     }
     
     var transcript: Transcript { session.transcript }
     
+    nonisolated(nonsending) func prepare(progress: Progress?) async throws {
+        progress?.totalUnitCount = 1
+        progress?.completedUnitCount = 1
+    }
+
     @discardableResult
     nonisolated(nonsending) func respond(to prompt: Prompt, options: GenerationOptions) async throws -> String {
         let response = try await session.respond(to: prompt, options: options)
