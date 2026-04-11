@@ -116,8 +116,11 @@ nonisolated class MLXSessionImplementation: IntelligenceSessionImplementation {
         transcriptEntries.append(.prompt(Transcript.Prompt(segments: segments, options: options, responseFormat: nil)))
 
         try await ensureLoaded()
+        guard let chatSession else {
+            throw MLXError.modelNotLoaded
+        }
         let promptText = extractText(from: segments)
-        let response = try await chatSession!.respond(to: promptText)
+        let response = try await chatSession.respond(to: promptText)
         return response
     }
 
@@ -135,7 +138,10 @@ nonisolated class MLXSessionImplementation: IntelligenceSessionImplementation {
         transcriptEntries.append(.prompt(Transcript.Prompt(segments: segments, options: options, responseFormat: nil)))
 
         try await ensureLoaded()
-        let responseText = try await chatSession!.respond(to: fullPrompt)
+        guard let chatSession else {
+            throw MLXError.modelNotLoaded
+        }
+        let responseText = try await chatSession.respond(to: fullPrompt)
 
         // Strip markdown code fences if present
         let cleaned = Self.stripCodeFences(responseText)
@@ -190,5 +196,28 @@ extension FoundationModels.Tool {
                 "parameters": parametersDict,
             ] as [String: any Sendable],
         ] as [String: any Sendable]
+    }
+}
+
+enum MLXError: LocalizedError {
+    case modelNotLoaded
+    case toolNotFound(String)
+    case toolNotCallable(String)
+    case argumentSerializationFailed(String)
+    case toolCallFailed(String, underlying: any Error)
+
+    var errorDescription: String? {
+        switch self {
+        case .modelNotLoaded:
+            return "MLX model is not loaded. Call prepare() before generating responses."
+        case .toolNotFound(let name):
+            return "Tool '\(name)' was not found."
+        case .toolNotCallable(let name):
+            return "Tool '\(name)' is not available for calling."
+        case .argumentSerializationFailed(let name):
+            return "Failed to serialize arguments for tool '\(name)'."
+        case .toolCallFailed(let name, let error):
+            return "Tool '\(name)' call failed: \(error.localizedDescription)"
+        }
     }
 }

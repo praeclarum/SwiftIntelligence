@@ -172,7 +172,6 @@ nonisolated class OpenAISessionImplementation: IntelligenceSessionImplementation
     }
 
     nonisolated(nonsending) func prepare(progress: Progress?) async throws {
-        // Set progress to 100%
         progress?.totalUnitCount = 1
         progress?.completedUnitCount = 1
     }

@@ -16,6 +16,7 @@ When a provider's session type (e.g. MLXLMCommon's `ChatSession`) is not `Sendab
 
 - Never use force unwrapping `!` or force try `try!` in library code. Instead, use `try` and propagate errors, or handle them gracefully.
 - Avoid `fatalError()` in library code. Instead, throw errors or use optional returns to indicate failure.
+- Use good, custom, descriptive error types that conform to `LocalizedError` for any errors that can occur in the library. This provides better error messages and allows users to handle specific error cases.
 
 ## Building
 
